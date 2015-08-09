@@ -2,6 +2,10 @@ extern crate gl;
 extern crate glfw;
 
 use glfw::{Context, WindowHint, OpenGlProfileHint};
+use std::fs::File;
+use std::io::Read;
+use std::ptr;
+use std::mem::transmute;
 
 fn main() {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
@@ -17,9 +21,12 @@ fn main() {
 
     gl::load_with( |s| window.get_proc_address(s) );
 
+    let vs_shader = load_shader("src/vs.glsl", gl::VERTEX_SHADER);
+    let fs_shader = load_shader("src/fs.glsl", gl::FRAGMENT_SHADER);
+
     while !window.should_close() {
         glfw.poll_events();
-        for (_, event) in glfw::flush_messages(&events) {
+        for (_, _) in glfw::flush_messages(&events) {
             // Handle event
         }
 
@@ -33,3 +40,19 @@ fn main() {
     println!("This is not a string");
 }
 
+fn load_shader(path: &str, shader_type: u32) -> u32 {
+    unsafe {
+        let source = load_file(path);
+        let shader = gl::CreateShader(shader_type);
+        gl::ShaderSource(shader, 1, transmute(&source.as_bytes()), ptr::null());
+        gl::CompileShader(shader);
+        shader
+    }
+}
+
+fn load_file(path: &str) -> String {
+    let mut f = File::open(path).unwrap();
+    let mut s = String::new();
+    f.read_to_string(&mut s).unwrap();
+    s
+}
