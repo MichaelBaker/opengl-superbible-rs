@@ -8,6 +8,7 @@ use std::io::Read;
 use std::ptr;
 use std::mem::transmute;
 use std::str;
+use std::ffi::CString;
 
 fn main() {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
@@ -23,12 +24,21 @@ fn main() {
 
     gl::load_with( |s| window.get_proc_address(s) );
 
-    let program = create_program("src/vs.glsl", "src/fs.glsl");
-    let mut vao = 0;
+    let program             = create_program("src/vs.glsl", "src/fs.glsl");
+    let mut vao_one         = 0;
+    let mut vbo_one         = 0;
+    let data_one: [f32; 12] = [ 0.25, -0.25, 0.5, 1.0, -0.25, -0.25, 0.5, 1.0,  0.25, 0.25, 0.5, 1.0];
+    let offset              = unsafe { gl::GetAttribLocation(program, CString::new("offset").unwrap().as_ptr()) };
+
 
     unsafe {
-        gl::GenVertexArrays(1, &mut vao);
-        gl::BindVertexArray(vao);
+        gl::GenVertexArrays(1, &mut vao_one);
+        gl::BindVertexArray(vao_one);
+        gl::EnableVertexAttribArray(offset as GLuint);
+        gl::GenBuffers(1, &mut vbo_one);
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo_one);
+        gl::VertexAttribPointer(offset as GLuint, 4, gl::FLOAT, gl::FALSE as GLboolean, 0, ptr::null());
+        gl::BindVertexArray(0);
     }
 
     while !window.should_close() {
@@ -38,19 +48,19 @@ fn main() {
         }
 
         unsafe {
-            gl::UseProgram(program);
             gl::ClearColor(1.0, 1.0, 1.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            gl::DrawArrays(gl::TRIANGLES, 0, 3);
-            window.swap_buffers();
-        }
-    }
-}
 
-fn check_error() {
-    unsafe {
-        let error = gl::GetError();
-        println!("{}", error);
+            gl::UseProgram(program);
+            gl::BindVertexArray(vao_one);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo_one);
+            gl::BufferData(gl::ARRAY_BUFFER, 48, transmute(&data_one), gl::DYNAMIC_DRAW);
+            gl::DrawArrays(gl::TRIANGLES, 0, 3);
+
+            window.swap_buffers();
+
+            gl::BindVertexArray(0);
+        }
     }
 }
 
