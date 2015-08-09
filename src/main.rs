@@ -41,8 +41,7 @@ fn main() {
             gl::UseProgram(program);
             gl::ClearColor(1.0, 1.0, 1.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            gl::PointSize(10.0);
-            gl::DrawArrays(gl::POINTS, 0, 1);
+            gl::DrawArrays(gl::TRIANGLES, 0, 3);
             window.swap_buffers();
         }
     }
