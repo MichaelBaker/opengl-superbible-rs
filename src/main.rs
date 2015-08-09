@@ -21,8 +21,7 @@ fn main() {
 
     gl::load_with( |s| window.get_proc_address(s) );
 
-    let vs_shader = load_shader("src/vs.glsl", gl::VERTEX_SHADER);
-    let fs_shader = load_shader("src/fs.glsl", gl::FRAGMENT_SHADER);
+    let program = create_program("src/vs.glsl", "src/fs.glsl");
 
     while !window.should_close() {
         glfw.poll_events();
@@ -38,6 +37,20 @@ fn main() {
     }
 
     println!("This is not a string");
+}
+
+fn create_program(vs_path: &str, fs_path: &str) -> u32 {
+    unsafe {
+        let vs_shader = load_shader(vs_path, gl::VERTEX_SHADER);
+        let fs_shader = load_shader(fs_path, gl::FRAGMENT_SHADER);
+        let program = gl::CreateProgram();
+        gl::AttachShader(program, vs_shader);
+        gl::AttachShader(program, fs_shader);
+        gl::LinkProgram(program);
+        gl::DeleteShader(vs_shader);
+        gl::DeleteShader(fs_shader);
+        program
+    }
 }
 
 fn load_shader(path: &str, shader_type: u32) -> u32 {
