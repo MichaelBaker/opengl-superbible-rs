@@ -24,11 +24,13 @@ fn main() {
 
     gl::load_with( |s| window.get_proc_address(s) );
 
-    let program             = create_program("src/vs.glsl", "src/fs.glsl", "src/tcs.glsl", "src/tes.glsl");
+    let program             = create_program("src/vs.glsl", "src/fs.glsl", "src/tcs.glsl", "src/tes.glsl", "src/geom.glsl");
     let mut vao_one         = 0;
     let mut vbo_one         = 0;
     let data_one: [f32; 12] = [ 0.25, -0.25, 0.5, 1.0, -0.25, -0.25, 0.5, 1.0,  0.25, 0.25, 0.5, 1.0];
     let offset              = unsafe { gl::GetAttribLocation(program, CString::new("offset").unwrap().as_ptr()) };
+
+    unsafe { gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE) };
 
     unsafe {
         gl::GenVertexArrays(1, &mut vao_one);
@@ -63,17 +65,19 @@ fn main() {
     }
 }
 
-fn create_program(vs_path: &str, fs_path: &str, tcs_path: &str, tes_path: &str) -> u32 {
+fn create_program(vs_path: &str, fs_path: &str, tcs_path: &str, tes_path: &str, geom_path: &str) -> u32 {
     unsafe {
-        let vs_shader  = load_shader(vs_path,  gl::VERTEX_SHADER);
-        let fs_shader  = load_shader(fs_path,  gl::FRAGMENT_SHADER);
-        let tcs_shader = load_shader(tcs_path, gl::TESS_CONTROL_SHADER);
-        let tes_shader = load_shader(tes_path, gl::TESS_EVALUATION_SHADER);
+        let vs_shader   = load_shader(vs_path,   gl::VERTEX_SHADER);
+        let fs_shader   = load_shader(fs_path,   gl::FRAGMENT_SHADER);
+        let tcs_shader  = load_shader(tcs_path,  gl::TESS_CONTROL_SHADER);
+        let tes_shader  = load_shader(tes_path,  gl::TESS_EVALUATION_SHADER);
+        let geom_shader = load_shader(geom_path, gl::GEOMETRY_SHADER);
         let program = gl::CreateProgram();
         gl::AttachShader(program, vs_shader);
         gl::AttachShader(program, fs_shader);
         gl::AttachShader(program, tcs_shader);
         gl::AttachShader(program, tes_shader);
+        gl::AttachShader(program, geom_shader);
         gl::LinkProgram(program);
 
         let mut status = gl::FALSE as GLint;
